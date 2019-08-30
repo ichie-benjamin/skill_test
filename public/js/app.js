@@ -1757,12 +1757,22 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['product'],
   data: function data() {
     return {
       errors: {},
       id: '',
+      total: '',
       name: '',
       isEdit: false,
       'products': this.product,
@@ -1779,6 +1789,7 @@ __webpack_require__.r(__webpack_exports__);
       this.data = data;
       this.isEdit = true;
       this.id = id;
+      this.name = data.product_name;
     },
     update: function update() {
       var _this = this;
@@ -1787,6 +1798,7 @@ __webpack_require__.r(__webpack_exports__);
         _this.success(_this.name + ' successfully updated');
 
         _this.isEdit = false;
+        _this.id = '';
       })["catch"](function (error) {
         _this.loading = false;
       });
@@ -1798,7 +1810,7 @@ __webpack_require__.r(__webpack_exports__);
       this.errors = {}, axios.post('/api/product', this.data).then(function (response) {
         _this2.loading = false;
 
-        _this2.products.push(response.data);
+        _this2.products.unshift(response.data);
 
         _this2.success(response.data.product_name + ' successfully added to products list');
 
@@ -1807,6 +1819,15 @@ __webpack_require__.r(__webpack_exports__);
         _this2.errors = error.response.data.errors;
         _this2.loading = false;
       });
+    },
+    del: function del(id) {
+      var _this3 = this;
+
+      if (confirm("Are you sure you want to delete this product ?")) {
+        axios["delete"]("/api/product/".concat(id)).then(function (response) {
+          _this3.products.splice(id, 1);
+        });
+      }
     },
     success: function success(data) {
       new Noty({
@@ -1833,6 +1854,13 @@ __webpack_require__.r(__webpack_exports__);
       this.data.product_name = "";
       this.data.price = "";
       this.data.quantity = "";
+    }
+  },
+  computed: {
+    grandTotal: function grandTotal() {
+      return this.products.reduce(function (total, item) {
+        return total + item.quantity * item.price;
+      }, 0);
     }
   }
 });
@@ -19675,36 +19703,85 @@ var render = function() {
             _vm._v(" "),
             _c(
               "tbody",
-              _vm._l(_vm.products, function(item, index) {
-                return _c("tr", [
-                  _c("td", [_vm._v(_vm._s(item["product_name"]))]),
-                  _vm._v(" "),
-                  _c("td", [_vm._v(_vm._s(item["quantity"]))]),
-                  _vm._v(" "),
-                  _c("td", [_vm._v(_vm._s(item["price"]))]),
-                  _vm._v(" "),
-                  _c("td", [_vm._v(_vm._s(item["date_time"]))]),
-                  _vm._v(" "),
-                  _c("td", [_vm._v(_vm._s(item["quantity"] * item["price"]))]),
-                  _vm._v(" "),
-                  _c("td", [
-                    _c(
-                      "button",
+              [
+                _c(
+                  "tr",
+                  {
+                    directives: [
                       {
-                        staticClass: "btn btn-sm btn-success",
-                        attrs: { type: "button" },
-                        on: {
-                          click: function($event) {
-                            return _vm.editProduct(item, index)
-                          }
-                        }
-                      },
-                      [_vm._v("Edit")]
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.products.length < 1,
+                        expression: "products.length < 1"
+                      }
+                    ]
+                  },
+                  [
+                    _c(
+                      "td",
+                      { staticClass: "text-center", attrs: { colspan: "7" } },
+                      [_vm._v("No products available")]
                     )
+                  ]
+                ),
+                _vm._v(" "),
+                _vm._l(_vm.products, function(item, index) {
+                  return _c("tr", [
+                    _c("td", [_vm._v(_vm._s(item["product_name"]))]),
+                    _vm._v(" "),
+                    _c("td", [_vm._v(_vm._s(item["quantity"]))]),
+                    _vm._v(" "),
+                    _c("td", [_vm._v(_vm._s(item["price"]))]),
+                    _vm._v(" "),
+                    _c("td", [_vm._v(_vm._s(item["date_time"]))]),
+                    _vm._v(" "),
+                    _c("td", [
+                      _vm._v(_vm._s(item["quantity"] * item["price"]))
+                    ]),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-sm btn-success",
+                          attrs: { type: "button" },
+                          on: {
+                            click: function($event) {
+                              return _vm.editProduct(item, index)
+                            }
+                          }
+                        },
+                        [_vm._v("Edit")]
+                      )
+                    ]),
+                    _vm._v(" "),
+                    _c("td", [
+                      _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-sm btn-danger",
+                          attrs: { type: "button" },
+                          on: {
+                            click: function($event) {
+                              return _vm.del(index)
+                            }
+                          }
+                        },
+                        [_vm._v("Delete")]
+                      )
+                    ])
+                  ])
+                }),
+                _vm._v(" "),
+                _c("tr", [
+                  _vm._m(1),
+                  _vm._v(" "),
+                  _c("td", { attrs: { colspan: "3" } }, [
+                    _c("strong", [_vm._v(_vm._s(_vm.grandTotal))])
                   ])
                 ])
-              }),
-              0
+              ],
+              2
             )
           ]
         )
@@ -19729,8 +19806,18 @@ var staticRenderFns = [
         _vm._v(" "),
         _c("th", [_vm._v("Total Value")]),
         _vm._v(" "),
-        _c("th", [_vm._v("Edit")])
+        _c("th", [_vm._v("Edit")]),
+        _vm._v(" "),
+        _c("th", [_vm._v("Delete")])
       ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("td", { attrs: { colspan: "4" } }, [
+      _c("strong", [_vm._v("Grand Total")])
     ])
   }
 ]

@@ -39,9 +39,13 @@
                     <th>Datetime submitted</th>
                     <th>Total Value</th>
                     <th>Edit</th>
+                    <th>Delete</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr v-show="products.length < 1">
+                    <td class="text-center" colspan="7">No products available</td>
+                </tr>
                 <tr v-for="(item,index) in products">
                     <td>{{ item['product_name'] }}</td>
                     <td>{{ item['quantity'] }}</td>
@@ -49,6 +53,11 @@
                     <td>{{ item['date_time'] }}</td>
                     <td>{{ item['quantity'] * item['price'] }}</td>
                     <td><button @click="editProduct(item,index)" type="button" class="btn btn-sm btn-success">Edit</button></td>
+                    <td><button @click="del(index)" type="button" class="btn btn-sm btn-danger">Delete</button></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><strong>Grand Total</strong></td>
+                    <td colspan="3"><strong>{{ grandTotal }}</strong></td>
                 </tr>
                 </tbody>
             </table>
@@ -65,6 +74,7 @@
             return {
                 errors:{},
                 id:'',
+                total:'',
                 name:'',
                 isEdit:false,
                 'products':this.product,
@@ -81,6 +91,7 @@
                 this.data = data;
                 this.isEdit = true;
                 this.id = id;
+                this.name = data.product_name;
             },
 
             update(){
@@ -88,6 +99,7 @@
                     .then((resp)=>{
                         this.success(this.name +' successfully updated');
                         this.isEdit = false;
+                        this.id = '';
                     })
                     .catch(error => {
                         this.loading = false;
@@ -98,13 +110,21 @@
                 this.errors = {},
                     axios.post('/api/product',this.data).then( (response) => {
                         this.loading = false;
-                        this.products.push(response.data);
+                        this.products.unshift(response.data);
                         this.success(response.data.product_name+' successfully added to products list')
                         this.clearData();
                     }).catch(error=>{
                         this.errors = error.response.data.errors;
                         this.loading = false;
                     });
+            },
+            del(id){
+                if (confirm("Are you sure you want to delete this product ?")) {
+                    axios.delete(`/api/product/${id}`)
+                        .then((response)=> {
+                            this.products.splice(id, 1);
+                        })
+                }
             },
             success(data){
                 new Noty({
@@ -133,6 +153,14 @@
                 this.data.price = "";
                 this.data.quantity = "";
             }
+        },
+        computed:{
+            grandTotal: function(){
+                return this.products.reduce(function(total, item){
+
+                    return total + (item.quantity * item.price);
+                },0);
+            },
         }
     }
 </script>

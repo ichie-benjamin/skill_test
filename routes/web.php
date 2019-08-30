@@ -16,3 +16,5 @@ Route::get('/', 'ProductController@index')->name('home');
 Route::post('api/product', 'ProductController@store');
 
 Route::put('api/product/{id}', 'ProductController@update');
+
+Route::delete('/api/product/{id}','ProductController@destroy');
