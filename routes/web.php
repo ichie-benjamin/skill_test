@@ -11,6 +11,8 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'ProductController@index')->name('home');
+
+Route::post('api/product', 'ProductController@store');
+
+Route::put('api/product/{id}', 'ProductController@update');
